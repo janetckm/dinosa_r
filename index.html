@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dino AR - Discover Dinosaurs!</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Loading Screen -->
+        <div id="loading-screen" class="screen active">
+            <div class="loading-content">
+                <h1>🦕 Dino AR Explorer 🦖</h1>
+                <div class="loading-spinner"></div>
+                <p>Loading your dinosaur adventure...</p>
+            </div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div id="camera-screen" class="screen">
+            <div class="camera-container">
+                <video id="camera-video" autoplay playsinline></video>
+                <canvas id="capture-canvas" style="display: none;"></canvas>
+                <div class="camera-overlay">
+                    <div class="capture-area">
+                        <div class="capture-frame">
+                            <p>📝 Draw your dinosaur here!</p>
+                        </div>
+                    </div>
+                    <button id="capture-btn" class="capture-button">📸 Capture Drawing</button>
+                    <button id="random-dino-btn" class="capture-button" style="background: #4CAF50; margin-top: 10px;">🎲 Random Dinosaur</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AR Screen -->
+        <div id="ar-screen" class="screen">
+            <div class="ar-container">
+                <canvas id="ar-canvas"></canvas>
+                <div class="ar-overlay">
+                    <div class="dino-info-panel">
+                        <h2 id="dino-name">Dinosaur Name</h2>
+                        <p id="dino-description">Dinosaur characteristics and information</p>
+                        <div class="dino-stats">
+                            <div class="stat">
+                                <span class="stat-label">Size:</span>
+                                <span id="dino-size">-</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Period:</span>
+                                <span id="dino-period">-</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-label">Diet:</span>
+                                <span id="dino-diet">-</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="controls-panel">
+                        <button id="move-btn" class="control-btn">🎮 Move Dino</button>
+                        <button id="rotate-btn" class="control-btn">🔄 Rotate</button>
+                        <button id="reset-btn" class="control-btn">🔄 Reset</button>
+                        <button id="animate-btn" class="control-btn">🎭 Animate</button>
+                        <button id="try-again-btn" class="control-btn">🎨 Try Again</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Screen -->
+        <div id="error-screen" class="screen">
+            <div class="error-content">
+                <h2>⚠️ Oops!</h2>
+                <p id="error-message">Something went wrong. Please try again.</p>
+                <button id="retry-btn" class="retry-button">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/detection.js"></script>
+    <script src="js/ar-renderer.js"></script>
+    <script src="js/dinosaur-data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

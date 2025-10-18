@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A-Frame AR Dinosaur Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: #000;
+            overflow: hidden;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+
+        .controls h2 {
+            margin: 0 0 15px 0;
+            color: #ff6b6b;
+        }
+
+        .model-selector {
+            margin-bottom: 15px;
+        }
+
+        .model-selector select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .btn.active {
+            background: #4CAF50;
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+
+        .status {
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .status.success {
+            background: #4CAF50;
+        }
+
+        .status.error {
+            background: #f44336;
+        }
+
+        .status.loading {
+            background: #ff9800;
+        }
+
+        .model-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ar-overlay {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+            z-index: 100;
+        }
+
+        .ar-overlay h3 {
+            margin: 0 0 10px 0;
+            color: #ff6b6b;
+        }
+
+        .ar-overlay p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .marker-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 250px;
+        }
+
+        .marker-info h3 {
+            margin: 0 0 10px 0;
+            color: #4CAF50;
+        }
+
+        .marker-info p {
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .marker-image {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #4CAF50;
+            margin: 10px 0;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                max-width: 250px;
+                padding: 15px;
+            }
+            
+            .button-group {
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- A-Frame and AR.js -->
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.2/aframe/build/aframe-ar.js"></script>
+
+    <div class="controls">
+        <h2>🦕 AR Dinosaur Viewer</h2>
+        
+        <div class="model-selector">
+            <label for="modelSelect">Select Dinosaur:</label>
+            <select id="modelSelect">
+                <option value="">Choose a model...</option>
+                <option value="triceratops.glb">Triceratops</option>
+                <option value="T-Rex.glb">T-Rex</option>
+                <option value="stegosaurus.glb">Stegosaurus</option>
+                <option value="brontosaurus.glb">Brontosaurus</option>
+                <option value="spinosaurus.glb">Spinosaurus</option>
+                <option value="raptor.glb">Raptor</option>
+                <option value="ankylosaurus.glb">Ankylosaurus</option>
+                <option value="gallimimus.glb">Gallimimus</option>
+                <option value="pachycephalosaurus.glb">Pachycephalosaurus</option>
+                <option value="plesiasaurus.glb">Plesiosaurus</option>
+                <option value="ichthyosaur.glb">Ichthyosaur</option>
+                <option value="mozazaur.glb">Mosasaurus</option>
+            </select>
+        </div>
+
+        <div class="button-group">
+            <button class="btn" id="loadModelBtn">📥 Load Model</button>
+            <button class="btn" id="randomBtn">🎲 Random</button>
+            <button class="btn" id="resetBtn">🔄 Reset</button>
+        </div>
+
+        <div class="button-group">
+            <button class="btn" id="animateBtn">🎭 Animate</button>
+            <button class="btn" id="scaleBtn">📏 Scale</button>
+            <button class="btn" id="rotateBtn">🔄 Rotate</button>
+        </div>
+
+        <div id="status" class="status">Ready to load models</div>
+        
+        <div id="modelInfo" class="model-info" style="display: none;">
+            <strong>Model Info:</strong><br>
+            <span id="modelName">-</span><br>
+            <span id="modelSize">-</span><br>
+            <span id="modelAnimations">-</span>
+        </div>
+    </div>
+
+    <div class="marker-info">
+        <h3>📱 AR Instructions</h3>
+        <p><strong>Step 1:</strong> Print the Hiro marker below</p>
+        <p><strong>Step 2:</strong> Point your camera at the marker</p>
+        <p><strong>Step 3:</strong> Load a dinosaur model</p>
+        <p><strong>Step 4:</strong> Watch the magic happen!</p>
+        
+        <div style="text-align: center; margin: 10px 0;">
+            <img src="https://jeromeetienne.github.io/AR.js/data/images/HIRO.jpg" 
+                 alt="Hiro Marker" class="marker-image">
+            <p style="font-size: 10px; color: #ccc;">Hiro Marker</p>
+        </div>
+    </div>
+
+    <div class="ar-overlay" id="arOverlay" style="display: none;">
+        <h3>🥽 AR Mode Active</h3>
+        <p>Point your camera at the Hiro marker to see the dinosaur!</p>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false;"
+        vr-mode-ui="enabled: false"
+        renderer="logarithmicDepthBuffer: true;"
+        style="width: 100vw; height: 100vh;">
+        
+        <!-- Camera -->
+        <a-entity camera></a-entity>
+        
+        <!-- Hiro Marker -->
+        <a-marker preset="hiro" id="hiro-marker">
+            <!-- Dinosaur model will be loaded here -->
+            <a-entity id="dinosaur-container" position="0 0 0" scale="0.5 0.5 0.5">
+                <!-- Model will be dynamically added here -->
+            </a-entity>
+        </a-marker>
+        
+        <!-- Lighting -->
+        <a-light type="ambient" color="#404040" intensity="0.6"></a-light>
+        <a-light type="directional" color="#ffffff" intensity="0.8" position="10 10 5"></a-light>
+        <a-light type="point" color="#ff6b6b" intensity="0.5" position="0 5 0"></a-light>
+    </a-scene>
+
+    <script>
+        class AFrameARViewer {
+            constructor() {
+                this.currentModel = null;
+                this.currentScale = 0.5;
+                this.currentRotation = 0;
+                this.isModelLoaded = false;
+                this.animations = null;
+                this.mixer = null;
+                
+                this.init();
+                this.setupEventListeners();
+            }
+
+            init() {
+                this.updateStatus('Ready to load models', 'success');
+                this.showAROverlay();
+            }
+
+            setupEventListeners() {
+                document.getElementById('loadModelBtn').addEventListener('click', () => {
+                    const modelSelect = document.getElementById('modelSelect');
+                    if (modelSelect.value) {
+                        this.loadModel(`models/${modelSelect.value}`);
+                    } else {
+                        this.updateStatus('Please select a model first', 'error');
+                    }
+                });
+
+                document.getElementById('randomBtn').addEventListener('click', () => {
+                    this.loadRandomModel();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.resetModel();
+                });
+
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.animateModel();
+                });
+
+                document.getElementById('scaleBtn').addEventListener('click', () => {
+                    this.scaleModel();
+                });
+
+                document.getElementById('rotateBtn').addEventListener('click', () => {
+                    this.rotateModel();
+                });
+            }
+
+            async loadModel(modelPath) {
+                try {
+                    this.updateStatus('Loading model...', 'loading');
+                    
+                    // Remove existing model
+                    this.removeCurrentModel();
+                    
+                    // Create new model entity
+                    const modelEntity = document.createElement('a-entity');
+                    modelEntity.setAttribute('gltf-model', `url(${modelPath})`);
+                    modelEntity.setAttribute('position', '0 0 0');
+                    modelEntity.setAttribute('scale', `${this.currentScale} ${this.currentScale} ${this.currentScale}`);
+                    modelEntity.setAttribute('rotation', `0 ${this.currentRotation} 0`);
+                    modelEntity.setAttribute('animation-mixer', '');
+                    modelEntity.id = 'dinosaur-model';
+                    
+                    // Add to scene
+                    const container = document.getElementById('dinosaur-container');
+                    container.appendChild(modelEntity);
+                    
+                    // Wait for model to load
+                    modelEntity.addEventListener('model-loaded', () => {
+                        this.currentModel = modelEntity;
+                        this.isModelLoaded = true;
+                        this.updateStatus('Model loaded successfully!', 'success');
+                        this.updateModelInfo(modelPath);
+                        this.setupAnimations();
+                    });
+                    
+                    // Handle loading errors
+                    modelEntity.addEventListener('error', (e) => {
+                        console.error('Model loading error:', e);
+                        this.updateStatus(`Failed to load model: ${e.detail}`, 'error');
+                    });
+                    
+                } catch (error) {
+                    console.error('Failed to load model:', error);
+                    this.updateStatus(`Failed to load model: ${error.message}`, 'error');
+                }
+            }
+
+            async loadRandomModel() {
+                const models = [
+                    'triceratops.glb', 'T-Rex.glb', 'stegosaurus.glb', 'brontosaurus.glb',
+                    'spinosaurus.glb', 'raptor.glb', 'ankylosaurus.glb', 'gallimimus.glb',
+                    'pachycephalosaurus.glb', 'plesiasaurus.glb', 'ichthyosaur.glb', 'mozazaur.glb'
+                ];
+                
+                const randomModel = models[Math.floor(Math.random() * models.length)];
+                this.loadModel(`models/${randomModel}`);
+            }
+
+            removeCurrentModel() {
+                const existingModel = document.getElementById('dinosaur-model');
+                if (existingModel) {
+                    existingModel.remove();
+                }
+                this.currentModel = null;
+                this.isModelLoaded = false;
+            }
+
+            resetModel() {
+                if (this.currentModel) {
+                    this.currentModel.setAttribute('position', '0 0 0');
+                    this.currentModel.setAttribute('rotation', '0 0 0');
+                    this.currentModel.setAttribute('scale', '0.5 0.5 0.5');
+                    this.currentScale = 0.5;
+                    this.currentRotation = 0;
+                    this.updateStatus('Model reset', 'success');
+                }
+            }
+
+            rotateModel() {
+                if (this.currentModel) {
+                    this.currentRotation += 45;
+                    this.currentModel.setAttribute('rotation', `0 ${this.currentRotation} 0`);
+                    this.updateStatus('Model rotated', 'success');
+                }
+            }
+
+            scaleModel() {
+                if (this.currentModel) {
+                    this.currentScale = this.currentScale > 0.5 ? 0.2 : 1.0;
+                    this.currentModel.setAttribute('scale', `${this.currentScale} ${this.currentScale} ${this.currentScale}`);
+                    this.updateStatus(`Model scaled to ${this.currentScale}x`, 'success');
+                }
+            }
+
+            setupAnimations() {
+                if (this.currentModel && this.currentModel.components['animation-mixer']) {
+                    const mixer = this.currentModel.components['animation-mixer'];
+                    if (mixer.mixer && mixer.mixer._actions) {
+                        this.animations = Object.keys(mixer.mixer._actions);
+                        this.updateStatus(`Animations loaded: ${this.animations.length}`, 'success');
+                    }
+                }
+            }
+
+            animateModel() {
+                if (this.currentModel && this.animations && this.animations.length > 0) {
+                    const randomAnimation = this.animations[Math.floor(Math.random() * this.animations.length)];
+                    this.currentModel.setAttribute('animation-mixer', `clip: ${randomAnimation}`);
+                    this.updateStatus(`Playing animation: ${randomAnimation}`, 'success');
+                } else {
+                    this.updateStatus('No animations available', 'error');
+                }
+            }
+
+            updateModelInfo(modelPath) {
+                const modelInfo = document.getElementById('modelInfo');
+                const modelName = document.getElementById('modelName');
+                const modelSize = document.getElementById('modelSize');
+                const modelAnimations = document.getElementById('modelAnimations');
+                
+                const fileName = modelPath.split('/').pop();
+                modelName.textContent = `File: ${fileName}`;
+                modelSize.textContent = `Scale: ${this.currentScale}x`;
+                modelAnimations.textContent = `Animations: ${this.animations ? this.animations.length : 0}`;
+                
+                modelInfo.style.display = 'block';
+            }
+
+            updateStatus(message, type) {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = `status ${type}`;
+                
+                if (type === 'loading') {
+                    status.innerHTML = `<div class="loading-spinner"></div>${message}`;
+                }
+            }
+
+            showAROverlay() {
+                document.getElementById('arOverlay').style.display = 'block';
+            }
+        }
+
+        // Initialize the AR viewer when the page loads
+        window.addEventListener('load', () => {
+            new AFrameARViewer();
+        });
+    </script>
+</body>
+</html>

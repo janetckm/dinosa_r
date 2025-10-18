@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GLB Model Viewer & AR Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+
+        .controls h2 {
+            margin: 0 0 15px 0;
+            color: #ff6b6b;
+        }
+
+        .model-selector {
+            margin-bottom: 15px;
+        }
+
+        .model-selector select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #333;
+            color: white;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+
+        .btn.active {
+            background: #4CAF50;
+        }
+
+        .status {
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 12px;
+        }
+
+        .status.success {
+            background: #4CAF50;
+        }
+
+        .status.error {
+            background: #f44336;
+        }
+
+        .status.loading {
+            background: #ff9800;
+        }
+
+        .model-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #fff;
+            border-top: 3px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .ar-overlay {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .ar-overlay h3 {
+            margin: 0 0 10px 0;
+            color: #ff6b6b;
+        }
+
+        .ar-overlay p {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                max-width: 250px;
+                padding: 15px;
+            }
+            
+            .button-group {
+                gap: 5px;
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <canvas id="canvas"></canvas>
+        
+        <div class="controls">
+            <h2>🦕 Model Viewer</h2>
+            
+            <div class="model-selector">
+                <label for="modelSelect">Select Dinosaur:</label>
+                <select id="modelSelect">
+                    <option value="">Choose a model...</option>
+                    <option value="triceratops.glb">Triceratops</option>
+                    <option value="T-Rex.glb">T-Rex</option>
+                    <option value="stegosaurus.glb">Stegosaurus</option>
+                    <option value="brontosaurus.glb">Brontosaurus</option>
+                    <option value="spinosaurus.glb">Spinosaurus</option>
+                    <option value="raptor.glb">Raptor</option>
+                    <option value="ankylosaurus.glb">Ankylosaurus</option>
+                    <option value="gallimimus.glb">Gallimimus</option>
+                    <option value="pachycephalosaurus.glb">Pachycephalosaurus</option>
+                    <option value="plesiasaurus.glb">Plesiosaurus</option>
+                    <option value="ichthyosaur.glb">Ichthyosaur</option>
+                    <option value="mozazaur.glb">Mosasaurus</option>
+                </select>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="loadBtn">📥 Load Model</button>
+                <button class="btn" id="randomBtn">🎲 Random</button>
+                <button class="btn" id="resetBtn">🔄 Reset</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="rotateBtn">🔄 Rotate</button>
+                <button class="btn" id="scaleBtn">📏 Scale</button>
+                <button class="btn" id="animateBtn">🎭 Animate</button>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="arBtn">🥽 AR Mode</button>
+                <button class="btn" id="viewBtn">👁️ View Mode</button>
+            </div>
+
+            <div id="status" class="status">Ready to load models</div>
+            
+            <div id="modelInfo" class="model-info" style="display: none;">
+                <strong>Model Info:</strong><br>
+                <span id="modelName">-</span><br>
+                <span id="modelSize">-</span><br>
+                <span id="modelAnimations">-</span>
+            </div>
+        </div>
+
+        <div class="ar-overlay" id="arOverlay" style="display: none;">
+            <h3>🥽 AR Mode Active</h3>
+            <p>Point your camera at a flat surface</p>
+        </div>
+    </div>
+
+    <!-- Three.js and GLTFLoader -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+        class ModelViewer {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.model = null;
+                this.mixer = null;
+                this.animations = null;
+                this.isARMode = false;
+                this.isInitialized = false;
+                
+                this.init();
+                this.setupEventListeners();
+            }
+
+            async init() {
+                try {
+                    // Setup Three.js scene
+                    this.scene = new THREE.Scene();
+                    this.scene.background = new THREE.Color(0x87CEEB);
+                    
+                    // Setup camera
+                    this.camera = new THREE.PerspectiveCamera(
+                        75,
+                        window.innerWidth / window.innerHeight,
+                        0.1,
+                        1000
+                    );
+                    this.camera.position.set(0, 0, 5);
+                    
+                    // Setup renderer
+                    const canvas = document.getElementById('canvas');
+                    this.renderer = new THREE.WebGLRenderer({
+                        canvas: canvas,
+                        antialias: true,
+                        alpha: true
+                    });
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                    this.renderer.setPixelRatio(window.devicePixelRatio);
+                    this.renderer.shadowMap.enabled = true;
+                    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    
+                    // Add lighting
+                    this.setupLighting();
+                    
+                    // Handle window resize
+                    window.addEventListener('resize', () => this.onWindowResize());
+                    
+                    this.isInitialized = true;
+                    this.updateStatus('Ready to load models', 'success');
+                    
+                    // Start render loop
+                    this.animate();
+                    
+                } catch (error) {
+                    console.error('Failed to initialize model viewer:', error);
+                    this.updateStatus('Failed to initialize', 'error');
+                }
+            }
+
+            setupLighting() {
+                // Ambient light
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                this.scene.add(ambientLight);
+                
+                // Directional light
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 10, 5);
+                directionalLight.castShadow = true;
+                this.scene.add(directionalLight);
+                
+                // Point light
+                const pointLight = new THREE.PointLight(0xff6b6b, 0.5, 100);
+                pointLight.position.set(0, 5, 0);
+                this.scene.add(pointLight);
+            }
+
+            setupEventListeners() {
+                document.getElementById('loadBtn').addEventListener('click', () => {
+                    const modelSelect = document.getElementById('modelSelect');
+                    if (modelSelect.value) {
+                        this.loadModel(`models/${modelSelect.value}`);
+                    } else {
+                        this.updateStatus('Please select a model first', 'error');
+                    }
+                });
+
+                document.getElementById('randomBtn').addEventListener('click', () => {
+                    this.loadRandomModel();
+                });
+
+                document.getElementById('resetBtn').addEventListener('click', () => {
+                    this.resetModel();
+                });
+
+                document.getElementById('rotateBtn').addEventListener('click', () => {
+                    this.rotateModel();
+                });
+
+                document.getElementById('scaleBtn').addEventListener('click', () => {
+                    this.scaleModel();
+                });
+
+                document.getElementById('animateBtn').addEventListener('click', () => {
+                    this.animateModel();
+                });
+
+                document.getElementById('arBtn').addEventListener('click', () => {
+                    this.toggleARMode();
+                });
+
+                document.getElementById('viewBtn').addEventListener('click', () => {
+                    this.toggleViewMode();
+                });
+            }
+
+            async loadModel(modelPath) {
+                if (!this.isInitialized) {
+                    this.updateStatus('Viewer not initialized', 'error');
+                    return;
+                }
+
+                try {
+                    this.updateStatus('Loading model...', 'loading');
+                    
+                    // Remove existing model
+                    if (this.model) {
+                        this.scene.remove(this.model);
+                        this.model = null;
+                    }
+
+                    // Load GLTF model
+                    const loader = new THREE.GLTFLoader();
+                    
+                    const gltf = await new Promise((resolve, reject) => {
+                        loader.load(
+                            modelPath,
+                            resolve,
+                            (progress) => {
+                                const percent = Math.round((progress.loaded / progress.total) * 100);
+                                this.updateStatus(`Loading... ${percent}%`, 'loading');
+                            },
+                            reject
+                        );
+                    });
+
+                    // Add model to scene
+                    this.model = gltf.scene;
+                    this.model.position.set(0, 0, 0);
+                    this.model.scale.set(1, 1, 1);
+                    
+                    // Enable shadows
+                    this.model.traverse((child) => {
+                        if (child.isMesh) {
+                            child.castShadow = true;
+                            child.receiveShadow = true;
+                        }
+                    });
+                    
+                    this.scene.add(this.model);
+                    
+                    // Setup animations
+                    if (gltf.animations && gltf.animations.length > 0) {
+                        this.mixer = new THREE.AnimationMixer(this.model);
+                        this.animations = gltf.animations;
+                        this.updateStatus(`Model loaded with ${gltf.animations.length} animations`, 'success');
+                    } else {
+                        this.updateStatus('Model loaded successfully', 'success');
+                    }
+                    
+                    // Update model info
+                    this.updateModelInfo(modelPath, gltf);
+                    
+                } catch (error) {
+                    console.error('Failed to load model:', error);
+                    this.updateStatus(`Failed to load model: ${error.message}`, 'error');
+                }
+            }
+
+            async loadRandomModel() {
+                const models = [
+                    'triceratops.glb', 'T-Rex.glb', 'stegosaurus.glb', 'brontosaurus.glb',
+                    'spinosaurus.glb', 'raptor.glb', 'ankylosaurus.glb', 'gallimimus.glb',
+                    'pachycephalosaurus.glb', 'plesiasaurus.glb', 'ichthyosaur.glb', 'mozazaur.glb'
+                ];
+                
+                const randomModel = models[Math.floor(Math.random() * models.length)];
+                this.loadModel(`models/${randomModel}`);
+            }
+
+            resetModel() {
+                if (this.model) {
+                    this.model.position.set(0, 0, 0);
+                    this.model.rotation.set(0, 0, 0);
+                    this.model.scale.set(1, 1, 1);
+                    this.updateStatus('Model reset', 'success');
+                }
+            }
+
+            rotateModel() {
+                if (this.model) {
+                    this.model.rotation.y += Math.PI / 4;
+                    this.updateStatus('Model rotated', 'success');
+                }
+            }
+
+            scaleModel() {
+                if (this.model) {
+                    const currentScale = this.model.scale.x;
+                    const newScale = currentScale > 1 ? 0.5 : 2;
+                    this.model.scale.set(newScale, newScale, newScale);
+                    this.updateStatus(`Model scaled to ${newScale}x`, 'success');
+                }
+            }
+
+            animateModel() {
+                if (this.mixer && this.animations && this.animations.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * this.animations.length);
+                    const clip = this.animations[randomIndex];
+                    const action = this.mixer.clipAction(clip);
+                    action.reset();
+                    action.play();
+                    this.updateStatus(`Playing animation: ${clip.name}`, 'success');
+                } else {
+                    this.updateStatus('No animations available', 'error');
+                }
+            }
+
+            toggleARMode() {
+                this.isARMode = !this.isARMode;
+                const arBtn = document.getElementById('arBtn');
+                const arOverlay = document.getElementById('arOverlay');
+                
+                if (this.isARMode) {
+                    arBtn.textContent = '👁️ View Mode';
+                    arBtn.classList.add('active');
+                    arOverlay.style.display = 'block';
+                    this.updateStatus('AR Mode activated', 'success');
+                } else {
+                    arBtn.textContent = '🥽 AR Mode';
+                    arBtn.classList.remove('active');
+                    arOverlay.style.display = 'none';
+                    this.updateStatus('View Mode activated', 'success');
+                }
+            }
+
+            toggleViewMode() {
+                this.isARMode = false;
+                const arBtn = document.getElementById('arBtn');
+                const arOverlay = document.getElementById('arOverlay');
+                
+                arBtn.textContent = '🥽 AR Mode';
+                arBtn.classList.remove('active');
+                arOverlay.style.display = 'none';
+                this.updateStatus('View Mode activated', 'success');
+            }
+
+            updateModelInfo(modelPath, gltf) {
+                const modelInfo = document.getElementById('modelInfo');
+                const modelName = document.getElementById('modelName');
+                const modelSize = document.getElementById('modelSize');
+                const modelAnimations = document.getElementById('modelAnimations');
+                
+                const fileName = modelPath.split('/').pop();
+                modelName.textContent = `File: ${fileName}`;
+                modelSize.textContent = `Size: ${gltf.scene.children.length} objects`;
+                modelAnimations.textContent = `Animations: ${gltf.animations ? gltf.animations.length : 0}`;
+                
+                modelInfo.style.display = 'block';
+            }
+
+            updateStatus(message, type) {
+                const status = document.getElementById('status');
+                status.textContent = message;
+                status.className = `status ${type}`;
+                
+                if (type === 'loading') {
+                    status.innerHTML = `<div class="loading-spinner"></div>${message}`;
+                }
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Update animation mixer
+                if (this.mixer) {
+                    this.mixer.update(0.016);
+                }
+                
+                // Rotate model slowly
+                if (this.model && !this.isARMode) {
+                    this.model.rotation.y += 0.005;
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+
+            onWindowResize() {
+                if (this.camera && this.renderer) {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            }
+        }
+
+        // Initialize the model viewer
+        window.addEventListener('load', () => {
+            new ModelViewer();
+        });
+    </script>
+</body>
+</html>
