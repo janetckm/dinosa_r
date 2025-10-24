@@ -259,13 +259,13 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        model: "THUDM/GLM-4.1V-9B-Thinking",
+                        model: "Pro/Qwen/Qwen2.5-VL-7B-Instruct",
                         messages: [{
                             role: "user",
                             content: [
                                 {
                                     type: "text",
-                                    text: "Answer in Traditional Chinese. What dinosaur is in this image? Please provide a detailed response including the dinosaur's name, time period it lived in, and some interesting facts about it. If the image doesn't contain a dinosaur or is unclear, please say so and suggest the dinosaur which looks most alike for reference."
+                                    text: "Answer in Traditional Chinese. What dinosaur is in this image of dinosaur drawing? Please provide a detailed response including the dinosaur's name, time period it lived in, and some interesting facts about it. If the image doesn't contain a dinosaur or is unclear, please say so and suggest the dinosaur which looks most alike for reference."
                                 },
                                 {
                                     type: "image_url",
