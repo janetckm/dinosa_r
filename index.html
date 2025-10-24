@@ -2,92 +2,318 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dino AR - Discover Dinosaurs!</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dinosaur Identifier</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        #camera {
+            width: 100%;
+            background: #eee;
+            aspect-ratio: 16/9;
+            margin: 0 auto;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        #camera video, #camera img, #camera canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        #captureBtn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #ff4444;
+            border: 4px solid white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            min-height: 100px;
+            display: none;
+            white-space: pre-wrap;
+        }
+        .hidden {
+            display: none !important;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
-    <div id="app">
-        <!-- Loading Screen -->
-        <div id="loading-screen" class="screen active">
-            <div class="loading-content">
-                <h1>🦕 Dino AR Explorer 🦖</h1>
-                <div class="loading-spinner"></div>
-                <p>Loading your dinosaur adventure...</p>
-            </div>
+    <div class="container">
+        <h1>Dinosaur Identifier</h1>
+        
+        <div id="camera">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas" class="hidden"></canvas>
+            <img id="photo" class="hidden">
         </div>
-
-        <!-- Camera Screen -->
-        <div id="camera-screen" class="screen">
-            <div class="camera-container">
-                <video id="camera-video" autoplay playsinline></video>
-                <canvas id="capture-canvas" style="display: none;"></canvas>
-                <div class="camera-overlay">
-                    <div class="capture-area">
-                        <div class="capture-frame">
-                            <p>📝 Draw your dinosaur here!</p>
-                        </div>
-                    </div>
-                    <button id="capture-btn" class="capture-button">📸 Capture Drawing</button>
-                    <button id="random-dino-btn" class="capture-button" style="background: #4CAF50; margin-top: 10px;">🎲 Random Dinosaur</button>
-                </div>
-            </div>
+        
+        <div class="controls">
+            <button id="startBtn">Start Camera</button>
+            <button id="captureBtn" disabled></button>
+            <button id="retakeBtn" class="hidden">Retake</button>
         </div>
-
-        <!-- AR Screen -->
-        <div id="ar-screen" class="screen">
-            <div class="ar-container">
-                <canvas id="ar-canvas"></canvas>
-                <div class="ar-overlay">
-                    <div class="dino-info-panel">
-                        <h2 id="dino-name">Dinosaur Name</h2>
-                        <p id="dino-description">Dinosaur characteristics and information</p>
-                        <div class="dino-stats">
-                            <div class="stat">
-                                <span class="stat-label">Size:</span>
-                                <span id="dino-size">-</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Period:</span>
-                                <span id="dino-period">-</span>
-                            </div>
-                            <div class="stat">
-                                <span class="stat-label">Diet:</span>
-                                <span id="dino-diet">-</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="controls-panel">
-                        <button id="move-btn" class="control-btn">🎮 Move Dino</button>
-                        <button id="rotate-btn" class="control-btn">🔄 Rotate</button>
-                        <button id="reset-btn" class="control-btn">🔄 Reset</button>
-                        <button id="animate-btn" class="control-btn">🎭 Animate</button>
-                        <button id="try-again-btn" class="control-btn">🎨 Try Again</button>
-                    </div>
-                </div>
-            </div>
+        
+        <div class="controls">
+            <button id="identifyBtn" class="hidden" disabled>Identify Dinosaur</button>
         </div>
-
-        <!-- Error Screen -->
-        <div id="error-screen" class="screen">
-            <div class="error-content">
-                <h2>⚠️ Oops!</h2>
-                <p id="error-message">Something went wrong. Please try again.</p>
-                <button id="retry-btn" class="retry-button">Try Again</button>
-            </div>
-        </div>
+        
+        <div id="result"></div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.2/dist/coco-ssd.min.js"></script>
-    <script src="js/camera.js"></script>
-    <script src="js/detection.js"></script>
-    <script src="js/ar-renderer.js"></script>
-    <script src="js/dinosaur-data.js"></script>
-    <script src="js/app.js"></script>
+    <script>
+        // DOM Elements
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const photo = document.getElementById('photo');
+        const startBtn = document.getElementById('startBtn');
+        const captureBtn = document.getElementById('captureBtn');
+        const retakeBtn = document.getElementById('retakeBtn');
+        const identifyBtn = document.getElementById('identifyBtn');
+        const resultDiv = document.getElementById('result');
+        
+        let stream = null;
+        let photoData = null;
+        
+        // Event Listeners
+        startBtn.addEventListener('click', startCamera);
+        captureBtn.addEventListener('click', takePhoto);
+        retakeBtn.addEventListener('click', retakePhoto);
+        identifyBtn.addEventListener('click', identifyDinosaur);
+        
+        // Check if running on mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            document.body.classList.add('mobile');
+        }
+
+        // Functions
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 1920, min: 1280 },
+                        height: { ideal: 1080, min: 720 },
+                        aspectRatio: 16/9,
+                        facingMode: 'environment' 
+                    },
+                    audio: false 
+                });
+                
+                video.srcObject = stream;
+                startBtn.disabled = true;
+                captureBtn.disabled = false;
+                video.classList.remove('hidden');
+                canvas.classList.add('hidden');
+                photo.classList.add('hidden');
+                retakeBtn.classList.add('hidden');
+                identifyBtn.classList.add('hidden');
+                resultDiv.style.display = 'none';
+                
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                showError('Could not access the camera. Please check permissions and try again.');
+            }
+        }
+        
+        function takePhoto() {
+            const context = canvas.getContext('2d');
+            const width = video.videoWidth;
+            const height = video.videoHeight;
+            
+            // Set canvas dimensions to match video
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw the current video frame to canvas
+            context.drawImage(video, 0, 0, width, height);
+            
+            // Stop video stream
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+            
+            // Show the captured image
+            photoData = canvas.toDataURL('image/jpeg', 0.8);
+            photo.src = photoData;
+            photo.classList.remove('hidden');
+            video.classList.add('hidden');
+            canvas.classList.add('hidden');
+            
+            // Update UI
+            captureBtn.disabled = true;
+            retakeBtn.classList.remove('hidden');
+            identifyBtn.classList.remove('hidden');
+            identifyBtn.disabled = false;
+            resultDiv.style.display = 'none';
+        }
+        
+        function retakePhoto() {
+            // Clear previous photo
+            photoData = null;
+            photo.src = '';
+            photo.classList.add('hidden');
+            
+            // Restart camera
+            startCamera();
+        }
+        
+        async function identifyDinosaur() {
+            if (!photoData) {
+                showError('No photo available to identify.');
+                return;
+            }
+
+            // Convert base64 to blob
+            const blob = await (await fetch(photoData)).blob();
+            const base64data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(blob);
+            });
+
+            // Show loading state
+            identifyBtn.disabled = true;
+            identifyBtn.innerHTML = 'Identifying... <span class="loading"></span>';
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Analyzing the dinosaur...';
+            resultDiv.style.color = '#333';
+
+            try {
+                const apiUrl = 'https://api.siliconflow.cn/v1/chat/completions';
+                // Replace 'YOUR_API_KEY' with your actual API key
+                const apiKey = 'sk-jqsplqefkwdmgywnqhmrgxtonuiuolsbxllqyzbqydsulovf';
+                
+                if (apiKey === 'YOUR_API_KEY') {
+                    throw new Error('Please replace "YOUR_API_KEY" with your actual API key');
+                }
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "THUDM/GLM-4.1V-9B-Thinking",
+                        messages: [{
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: "Answer in Traditional Chinese. What dinosaur is in this image? Please provide a detailed response including the dinosaur's name, time period it lived in, and some interesting facts about it. If the image doesn't contain a dinosaur or is unclear, please say so and suggest the dinosaur which looks most alike for reference."
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${base64data}`
+                                    }
+                                }
+                            ]
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const responseText = data.choices?.[0]?.message?.content || 'No response content';
+                
+                // Display the result
+                resultDiv.innerHTML = `<strong>Dinosaur Identification Result:</strong><br><br>${responseText}`;
+                resultDiv.style.color = '#333';
+
+            } catch (error) {
+                console.error('Error identifying dinosaur:', error);
+                showError(`Error: ${error.message || 'Failed to identify dinosaur. Please try again.'}`);
+            } finally {
+                // Reset button state
+                identifyBtn.disabled = false;
+                identifyBtn.textContent = 'Identify Dinosaur';
+            }
+        }
+
+        function showError(message) {
+            resultDiv.style.display = 'block';
+            resultDiv.textContent = message;
+            resultDiv.style.color = '#d32f2f';
+            resultDiv.style.backgroundColor = '#ffebee';
+            resultDiv.style.padding = '15px';
+            resultDiv.style.borderRadius = '8px';
+            resultDiv.style.marginTop = '15px';
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Show camera start button
+            startBtn.disabled = false;
+        });
+    </script>
 </body>
 </html>
