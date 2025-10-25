@@ -104,7 +104,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>🦖恐龍辨識器🦖<br>Dinosaur Identifier</h1>
+        <h1>🦖恐龍召喚器🦖<br>Dinosaur!</h1>
         
         <div id="camera">
             <video id="video" autoplay playsinline></video>
@@ -265,7 +265,7 @@
                             content: [
                                 {
                                     type: "text",
-                                    text: "Answer in Traditional Chinese. What dinosaur is in this image of dinosaur drawing? Please provide a detailed response including the dinosaur's name, time period it lived in, and some interesting facts about it. If the image doesn't contain a dinosaur or is unclear, please say so and suggest the dinosaur which looks most alike for reference."
+                                    text: "Identify the dinosaur in the image. Choose the closest match only from this list: raptor, spinosaurus, stegosaurus, T-Rex, triceratops, ankylosaurus, brontosaurus, gallimimus, ichthyosaur, mozazaur, pachycephalosaurus, plesiasaurus. Respond ONLY with the dinosaur's English name from the list, nothing else."
                                 },
                                 {
                                     type: "image_url",
@@ -285,8 +285,39 @@
                 const data = await response.json();
                 const responseText = data.choices?.[0]?.message?.content || 'No response content';
                 
-                // Display the result
-                resultDiv.innerHTML = `<strong>Dinosaur Identification Result:</strong><br><br>${responseText}`;
+                // Process the dinosaur name
+                const dinosaurName = responseText.trim().toLowerCase();
+                const validDinosaurs = [
+                    'raptor', 'spinosaurus', 'stegosaurus', 't-rex', 'triceratops',
+                    'ankylosaurus', 'brontosaurus', 'gallimimus', 'ichthyosaur',
+                    'mozazaur', 'pachycephalosaurus', 'plesiasaurus'
+                ];
+
+                // Check if the response is a valid dinosaur name
+                const isValidDinosaur = validDinosaurs.includes(dinosaurName);
+                const displayName = dinosaurName.charAt(0).toUpperCase() + dinosaurName.slice(1);
+
+                // Display the result with a button to the dinosaur page
+                if (isValidDinosaur) {
+                    resultDiv.innerHTML = `
+                        <strong>Dinosaur Identified:</strong> ${displayName}
+                        <div style="margin-top: 15px;">
+                            <a href="${dinosaurName}.html" class="dino-link">
+                                <button style="background-color: #4CAF50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 10px;">
+                                    🦕 認識${displayName} / Learn about ${displayName} 🦕
+                                </button>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <strong>Dinosaur Identification Result:</strong><br><br>
+                        ${responseText}
+                        <p style="margin-top: 15px; font-style: italic;">
+                            Could not find a matching dinosaur page.
+                        </p>
+                    `;
+                }
                 resultDiv.style.color = '#333';
 
             } catch (error) {
