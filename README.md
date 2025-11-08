@@ -1,40 +1,24 @@
+""
+
 # Dino AR Explorer 🦕
 
 A web-based Augmented Reality application for children to discover dinosaurs by drawing them! This app uses computer vision to detect dinosaur drawings and displays 3D dinosaur models in AR.
 
-## Features
-
-- 📱 **Mobile & Tablet Optimized**: Works on smartphones and tablets
-- 🎨 **Drawing Detection**: Captures and analyzes children's dinosaur drawings
-- 🦕 **Dinosaur Recognition**: Identifies 6 different dinosaur types
-- 🥽 **AR Experience**: Displays 3D dinosaur models in augmented reality
-- 📚 **Educational Content**: Shows dinosaur information and characteristics
-- 🎮 **Interactive Controls**: Touch controls to move and rotate dinosaurs
-
-## Supported Dinosaurs
-
-1. **Triceratops** - Three-horned herbivore
-2. **Tyrannosaurus Rex** - The king of dinosaurs
-3. **Stegosaurus** - Plated dinosaur with tail spikes
-4. **Brontosaurus** - Long-necked giant
-5. **Pterodactyl** - Flying reptile
-6. **Velociraptor** - Fast and intelligent predator
-
 ## How to Use
 
-1. **Open the App**: Load `index.html` in a mobile browser
-2. **Allow Camera Access**: Grant permission when prompted
-3. **Draw a Dinosaur**: Have children draw a dinosaur on paper
-4. **Capture**: Point the camera at the drawing and tap "Capture Drawing"
-5. **Explore**: Watch as the app identifies the dinosaur and shows it in AR
-6. **Interact**: Use touch controls to move and rotate the dinosaur
+1.**Draw a Dinosaur**: Parents and children draw a dinosaur on paper card
+2. **Open the Web**: Load `index.html` in a mobile browser
+3. **Allow Camera Access**: Grant permission when prompted
+5. **Capture**: Point the camera at the drawing and tap "Capture Drawing"
+6. **Explore**: Watch as the app identifies the dinosaur and show the relevant knowledge
+7. **Interact**: Use touch controls to move and rotate the dinosaur; build trees for dinosaurs!
 
 ## Technical Requirements
 
 - Modern mobile browser with camera support
 - HTTPS connection (required for camera access)
 - WebGL support for 3D rendering
-- Touch screen device
+- Touch screen mobile
 
 ## Browser Compatibility
 
