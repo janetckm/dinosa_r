@@ -24,20 +24,26 @@
             margin: 10px 0;
         }
         .dino-list a {
-            display: block;
-            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            padding: 20px 25px;
             background-color: #f8f9fa;
-            border-radius: 5px;
+            border-radius: 10px;
             text-decoration: none;
             color: #2c3e50;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
         .dino-list a:hover {
             background-color: #e9ecef;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         .dino-name {
             font-weight: bold;
             text-transform: capitalize;
+            margin-right: 5px;
         }
         .back-button {
             display: inline-block;
@@ -46,7 +52,49 @@
             padding: 10px 20px;
             text-decoration: none;
             border-radius: 5px;
-            margin-top: 20px;
+            margin: 20px 0;
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+        .dino-list img {
+            width: auto;
+            height: 150px;
+            max-width: 200px;
+            border-radius: 6px;
+            object-fit: contain;
+            margin-left: 20px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background-color: #f5f5f5;
+        }
+        @media (max-width: 768px) {
+            .dino-list a {
+                flex-direction: column;
+                text-align: center;
+                padding: 15px 10px;
+            }
+            .dino-list img {
+                margin: 15px auto 0;
+                width: auto;
+                height: auto;
+                max-height: 200px;
+                max-width: 100%;
+                background-color: #f5f5f5;
+            }
+            .dino-name {
+                display: block;
+                margin: 0 0 5px 0;
+            }
+        }
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.5em;
+            }
+            h2 {
+                font-size: 1.2em;
+            }
         }
     </style>
 </head>
@@ -57,9 +105,10 @@
 
     <h2>肉食性 Carnivorous</h2>
     <ul class="dino-list">
-        <li><a href="t-rex.html"><span class="dino-name">Tyrannosaurus Rex 暴龍</span> - The king of the dinosaurs</a></li>
+        <li><a href="t-rex.html"><span class="dino-name">Tyrannosaurus Rex 暴龍</span> - The king of the dinosaurs<img src="img/trex_cover.png" alt=""></a></li>
         <!-- <li><a href="raptor.html"><span class="dino-name">Velociraptor 伶盜龍</span> - The swift hunter</a></li> -->
-        <li><a href="spinosaurus.html"><span class="dino-name">Spinosaurus 棘龍</span> - The spine lizard</a></li>
+        <li><a href="spinosaurus.html"><span class="dino-name">Spinosaurus 棘龍</span> - The spine lizard<img src="img/spino_cover.png" alt=""></a></li>
+    
     </ul>
 
     <h2>草食性 Herbivorous</h2>
